@@ -1,0 +1,17 @@
+*~
+~*
+*#
+*.bak
+*.swp
+*.pyc
+*.class
+*.tgz
+*.tar.gz
+node_modules/
+dist/
+build/
+install/
+logs/
+log/
+release/
+external/
