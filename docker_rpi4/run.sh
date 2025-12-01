@@ -1,7 +1,9 @@
 #ros_image="ros2_humble:latest"
 #ros_container="ros2_humble_container"
-ros_image="ros2_jazzy:latest"
-ros_container="ros2_jazzy_container"
+#ros_image="ros2_jazzy:latest"
+#ros_container="ros2_jazzy_container"
+ros_image="ros2_kilted:latest"
+ros_container="ros2_kilted_container"
 
 docker run -d -it --rm \
     --net=host \

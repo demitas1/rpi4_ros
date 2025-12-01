@@ -1,0 +1,49 @@
+# ROS2 Kilted (最新安定版) - Ubuntu 24.04ベース
+FROM ubuntu:24.04
+
+# 環境変数の設定
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 依存パッケージのインストール
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg2 \
+    lsb-release \
+    python3-pip \
+    python3-argcomplete \
+    vim
+
+# ロケールの設定
+RUN apt-get install -y locales
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+
+# ROS 2 aptリポジトリの追加
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# ROS 2 Kiltedのインストール
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    ros-dev-tools \
+    ros-kilted-ros-base \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    && rm -rf /var/lib/apt/lists/*
+
+# 環境設定
+RUN echo "source /opt/ros/kilted/setup.bash" >> ~/.bashrc
+
+# ros2ワークスペースの設定
+WORKDIR /root/ros2_ws
+COPY ./ros2_ws /root/ros2_ws
+RUN rosdep init
+RUN rosdep update
+RUN rosdep install -i --from-path src --rosdistro kilted -y
+
+# ビルド
+RUN ["/bin/bash", "-c", "\
+    source /opt/ros/kilted/setup.bash && \
+    colcon build --packages-select py_pubsub \
+"]
