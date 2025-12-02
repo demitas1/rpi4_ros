@@ -34,15 +34,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 # Set up environment
 RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
 
-# Set up ros2 workspace
+# ros2ワークスペースの準備
 WORKDIR /root/ros2_ws
-COPY ./ros2_ws /root/ros2_ws
-RUN rosdep init
-RUN rosdep update
-RUN rosdep install -i --from-path src --rosdistro jazzy -y
-
-# Build
-RUN ["/bin/bash", "-c", "\
-    source /opt/ros/jazzy/setup.bash && \
-    colcon build --packages-select py_pubsub \
-"]
+RUN rosdep init && rosdep update

@@ -18,7 +18,20 @@ docker images
 docker ps
 ```
 
-## ビルド
+## クイックスタート（ビルド済みイメージを使用）
+
+GitHub Container Registryから公開イメージを取得して使用できます。
+
+```bash
+# イメージを取得
+docker pull ghcr.io/demitas1/ros2_kilted:latest
+
+# または Jazzy/Humble
+docker pull ghcr.io/demitas1/ros2_jazzy:latest
+docker pull ghcr.io/demitas1/ros2_humble:latest
+```
+
+## ローカルでイメージをビルド
 
 ```bash
 cd docker_rpi4
@@ -50,29 +63,65 @@ bash run.sh
 docker exec -it ros2_kilted_container bash
 ```
 
-## ROS2ノードの実行
+## 開発ワークフロー
 
-コンテナ内で以下を実行:
+このリポジトリでは、ROS2ベースイメージとノードのソースコードを分離して管理します。
+
+- **ベースイメージ**: ROS2環境のみを含む（GitHub Actionsで自動ビルド）
+- **ノード**: `ros2_ws/src/` にcloneして使用（ボリュームマウント）
+
+### 1. ワークスペースのセットアップ
 
 ```bash
-source ./install/setup.bash
+cd docker_rpi4/ros2_ws/src
 
-# Publisher
-ros2 run py_pubsub talker
-
-# Subscriber（別ターミナルで）
-ros2 run py_pubsub listener
+# 必要なノードをclone
+git clone https://github.com/yourname/my_robot.git
+git clone https://github.com/yourname/my_sensors.git
 ```
 
-## パッケージの再ビルド
-
-コンテナ内で:
+### 2. コンテナを起動
 
 ```bash
+cd docker_rpi4
+bash start.sh
+```
+
+### 3. コンテナ内でビルド
+
+```bash
+docker exec -it ros2_kilted_container bash
+
+# ROS2環境をsource
 source /opt/ros/kilted/setup.bash
-cd /root/ros2_ws
-colcon build --packages-select py_pubsub
-source ./install/setup.bash
+
+# 依存パッケージをインストール
+rosdep install -i --from-path src --rosdistro kilted -y
+
+# ビルド
+colcon build
+
+# ビルド成果物をsource
+source install/setup.bash
+```
+
+### 4. ノードを実行
+
+```bash
+# 例: my_robotパッケージのmy_nodeを実行
+ros2 run my_robot my_node
+```
+
+### 5. コード編集後の再ビルド
+
+ホスト側でコードを編集後、コンテナ内で再ビルド:
+
+```bash
+# 特定パッケージのみ再ビルド
+colcon build --packages-select my_robot
+
+# 変更を反映
+source install/setup.bash
 ```
 
 ## テストの実行
@@ -80,7 +129,7 @@ source ./install/setup.bash
 コンテナ内で:
 
 ```bash
-colcon test --packages-select py_pubsub
+colcon test --packages-select my_robot
 colcon test-result --verbose
 ```
 
@@ -97,11 +146,20 @@ rpi4_ros2/
 │   ├── start.sh            # コンテナ起動スクリプト
 │   ├── stop.sh             # コンテナ停止スクリプト
 │   ├── run.sh              # 手動起動スクリプト
-│   └── ros2_ws/            # ROS2ワークスペース
+│   └── ros2_ws/            # ROS2ワークスペース（マウント）
 │       └── src/
-│           └── py_pubsub/  # サンプルパッケージ
+│           ├── my_robot/   # git cloneしたノード
+│           └── my_sensors/ # git cloneしたノード
 └── tools/                  # ユーティリティスクリプト
 ```
+
+## 公開イメージ
+
+| イメージ | Ubuntu | アーキテクチャ |
+|---------|--------|---------------|
+| `ghcr.io/demitas1/ros2_kilted:latest` | 24.04 | amd64, arm64 |
+| `ghcr.io/demitas1/ros2_jazzy:latest` | 24.04 | amd64, arm64 |
+| `ghcr.io/demitas1/ros2_humble:latest` | 22.04 | amd64, arm64 |
 
 ## Tools
 

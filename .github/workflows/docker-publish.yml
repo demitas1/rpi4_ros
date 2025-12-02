@@ -8,8 +8,6 @@ on:
     paths:
       # Dockerfileが変更されたとき
       - 'docker_rpi4/Dockerfile*'
-      # ROS2ワークスペースのソースが変更されたとき
-      - 'docker_rpi4/ros2_ws/src/**'
       # このワークフロー自体が変更されたとき
       - '.github/workflows/docker-publish.yml'
 
@@ -54,7 +52,6 @@ jobs:
             humble:
               - 'docker_rpi4/Dockerfile.humble'
             common:
-              - 'docker_rpi4/ros2_ws/src/**'
               - '.github/workflows/docker-publish.yml'
 
   # Kiltedイメージのビルド

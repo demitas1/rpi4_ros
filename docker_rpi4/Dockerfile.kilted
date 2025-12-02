@@ -35,15 +35,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 # 環境設定
 RUN echo "source /opt/ros/kilted/setup.bash" >> ~/.bashrc
 
-# ros2ワークスペースの設定
+# ros2ワークスペースの準備
 WORKDIR /root/ros2_ws
-COPY ./ros2_ws /root/ros2_ws
-RUN rosdep init
-RUN rosdep update
-RUN rosdep install -i --from-path src --rosdistro kilted -y
-
-# ビルド
-RUN ["/bin/bash", "-c", "\
-    source /opt/ros/kilted/setup.bash && \
-    colcon build --packages-select py_pubsub \
-"]
+RUN rosdep init && rosdep update
