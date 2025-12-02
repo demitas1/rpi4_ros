@@ -1,0 +1,178 @@
+name: Docker Image Build and Push
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      # Dockerfileが変更されたとき
+      - 'docker_rpi4/Dockerfile*'
+      # ROS2ワークスペースのソースが変更されたとき
+      - 'docker_rpi4/ros2_ws/src/**'
+      # このワークフロー自体が変更されたとき
+      - '.github/workflows/docker-publish.yml'
+
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'ビルドするイメージ (kilted/jazzy/humble/all)'
+        required: true
+        default: 'kilted'
+        type: choice
+        options:
+          - kilted
+          - jazzy
+          - humble
+          - all
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ros2
+
+jobs:
+  # 変更されたファイルを検出
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      kilted: ${{ steps.filter.outputs.kilted }}
+      jazzy: ${{ steps.filter.outputs.jazzy }}
+      humble: ${{ steps.filter.outputs.humble }}
+      common: ${{ steps.filter.outputs.common }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            kilted:
+              - 'docker_rpi4/Dockerfile.kilted'
+            jazzy:
+              - 'docker_rpi4/Dockerfile.jazzy'
+            humble:
+              - 'docker_rpi4/Dockerfile.humble'
+            common:
+              - 'docker_rpi4/ros2_ws/src/**'
+              - '.github/workflows/docker-publish.yml'
+
+  # Kiltedイメージのビルド
+  build-kilted:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.kilted == 'true' ||
+      needs.detect-changes.outputs.common == 'true' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.image == 'kilted' || github.event.inputs.image == 'all'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ghcr.ioにログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: QEMUをセットアップ
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker Buildxをセットアップ
+        uses: docker/setup-buildx-action@v3
+
+      - name: イメージをビルド・プッシュ (Kilted)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker_rpi4
+          file: ./docker_rpi4/Dockerfile.kilted
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_kilted:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_kilted:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Jazzyイメージのビルド
+  build-jazzy:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.jazzy == 'true' ||
+      needs.detect-changes.outputs.common == 'true' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.image == 'jazzy' || github.event.inputs.image == 'all'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ghcr.ioにログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: QEMUをセットアップ
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker Buildxをセットアップ
+        uses: docker/setup-buildx-action@v3
+
+      - name: イメージをビルド・プッシュ (Jazzy)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker_rpi4
+          file: ./docker_rpi4/Dockerfile.jazzy
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_jazzy:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_jazzy:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Humbleイメージのビルド
+  build-humble:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.humble == 'true' ||
+      needs.detect-changes.outputs.common == 'true' ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.image == 'humble' || github.event.inputs.image == 'all'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ghcr.ioにログイン
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: QEMUをセットアップ
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker Buildxをセットアップ
+        uses: docker/setup-buildx-action@v3
+
+      - name: イメージをビルド・プッシュ (Humble)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker_rpi4
+          file: ./docker_rpi4/Dockerfile.humble
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_humble:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}_humble:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
