@@ -1,0 +1,14 @@
+services:
+  ros2:
+    image: ros2_kilted:latest
+    container_name: ros2_kilted_container
+    stdin_open: true
+    tty: true
+    network_mode: host
+    shm_size: 1gb
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      - ROS_DOMAIN_ID=42
+    # コンテナをバックグラウンドで起動し続ける
+    command: ["bash"]
