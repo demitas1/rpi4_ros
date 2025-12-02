@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - main
+      - develop
     paths:
       # Dockerfileが変更されたとき
       - 'docker_rpi4/Dockerfile*'
