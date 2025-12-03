@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "ROS2 Jazzyコンテナを起動しています（ghcr.io）..."
+echo "ROS2 コンテナを起動しています（ghcr.io）..."
 docker compose pull
 docker compose up -d
 

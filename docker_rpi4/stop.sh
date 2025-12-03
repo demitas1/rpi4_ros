@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "ROS2 Kiltedコンテナを停止しています..."
+echo "ROS2 コンテナを停止しています..."
 docker compose down
 
 if [ $? -eq 0 ]; then
