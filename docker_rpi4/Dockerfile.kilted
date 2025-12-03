@@ -32,9 +32,31 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     python3-rosdep \
     && rm -rf /var/lib/apt/lists/*
 
-# 環境設定
+# ros2_user ユーザーの作成（既存のUID/GID 1000がある場合はそれを使用）
+ARG UID=1000
+ARG GID=1000
+RUN if getent passwd ${UID} > /dev/null 2>&1; then \
+        existing_user=$(getent passwd ${UID} | cut -d: -f1) && \
+        usermod -l ros2_user -d /home/ros2_user -m $existing_user && \
+        groupmod -n ros2_user $(getent group ${GID} | cut -d: -f1) 2>/dev/null || true; \
+    else \
+        groupadd -g ${GID} ros2_user 2>/dev/null || true && \
+        useradd -m -u ${UID} -g ${GID} -s /bin/bash ros2_user; \
+    fi && \
+    echo "ros2_user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# sudoのインストール
+RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
+
+# ros2_userの環境設定
+USER ros2_user
 RUN echo "source /opt/ros/kilted/setup.bash" >> ~/.bashrc
 
+# rosdepの初期化（rootで実行後、ros2_userで更新）
+USER root
+RUN rosdep init
+USER ros2_user
+RUN rosdep update
+
 # ros2ワークスペースの準備
-WORKDIR /root/ros2_ws
-RUN rosdep init && rosdep update
+WORKDIR /home/ros2_user/ros2_ws

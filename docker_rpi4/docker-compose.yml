@@ -1,15 +1,15 @@
 services:
   ros2:
-    image: ros2_kilted:latest
-    container_name: ros2_kilted_container
+    image: ghcr.io/demitas1/ros2_jazzy:latest
+    container_name: ros2_jazzy_container
     stdin_open: true
     tty: true
     network_mode: host
     shm_size: 1gb
     volumes:
       - /dev/shm:/dev/shm
-      - ./ros2_ws:/root/ros2_ws
+      - ./ros2_ws:/home/ros2_user/ros2_ws
     environment:
       - ROS_DOMAIN_ID=42
-    working_dir: /root/ros2_ws
+    working_dir: /home/ros2_user/ros2_ws
     command: ["bash"]
