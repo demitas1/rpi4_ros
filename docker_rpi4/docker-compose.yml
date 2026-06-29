@@ -2,6 +2,7 @@ services:
   ros2:
     image: ghcr.io/demitas1/ros2_jazzy:latest
     container_name: ros2_jazzy_container
+    restart: unless-stopped
     stdin_open: true
     tty: true
     network_mode: host
